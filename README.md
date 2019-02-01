@@ -29,6 +29,17 @@ In the cell below:
 * Create an class called `KNN`.
 * This class should contain two empty methods--`fit`, and `predict`. (Set the body of both of these methods to `pass`)
 
+
+```python
+class KNN(object):
+    
+    def fit(self):
+        pass
+    
+    def predict(self):
+        pass
+```
+
 ## Completing the `fit` Method
 
 Recall from our previous lesson on KNN that when "fitting" a KNN classifier, all we're really doing is storing the points and their corresponding labels. There's no actual "fitting" involved here, since all we can do is store the data so that we can use it to calculate the nearest nighbors when the `predict` method is called.
@@ -44,11 +55,40 @@ In the cell below, complete the `fit` method.
 
 ```python
 def fit(self, X_train, y_train):
-    pass
+    """
+    should return 1 array 
+    [[[a0, a1], y]]
+     [[b0, b1], y]]]
+    """
+    self.X_train = X_train
+    self.y_train = y_train
+    return np.column_stack([X_train, y_train])
     
 # This line updates the knn.fit method to point to the function we've just written
 KNN.fit = fit
 ```
+
+
+```python
+X0 = np.random.normal(50, 20, 100)
+X1 = np.random.normal(70, 30, 100)
+X = np.column_stack([X0, X1])
+y = np.random.choice([0, 1], size=100)
+```
+
+
+```python
+knn = KNN()
+knn.fit(X, y)[:2]
+```
+
+
+
+
+    array([[78.45966993, 21.02730094,  1.        ],
+           [57.9217317 , 67.98597536,  0.        ]])
+
+
 
 ### Helper Functions
 
@@ -66,10 +106,20 @@ In the cell below, complete the `_get_distances()` function. This function shoul
 
 ```python
 def _get_distances(self, x):
-    pass
+    distances = []
+    for ind, val in enumerate (self.X_train):
+        distance_to_i = euc(x, val)
+        distances.append((ind, distance_to_i))
+    return np.array(distances)
 
 # This line attaches the function we just created as a method to our KNN class.
 KNN._get_distances = _get_distances
+```
+
+
+```python
+x = np.array([20, 50])
+dist = knn._get_distances(x)
 ```
 
 Great! The second big challenge in a `predict` method is getting the indices of the k-nearest points. To keep our coming `predict` method nice and clean, we'll abstract this functionality into a helper method called `_get_k_nearest`.  
@@ -88,11 +138,28 @@ In the cell below, complete the `_get_k_nearest` function.  This function should
 
 ```python
 def _get_k_nearest(self, dists, k):
-    pass
-
+    sorted_distances =  sorted(dists, key=lambda p: p[1],reverse=False)
+    return sorted_distances[:k]
 # This line attaches the function we just created as a method to our KNN class.
 KNN._get_k_nearest = _get_k_nearest
 ```
+
+
+```python
+k_nearest =  knn._get_k_nearest(dist, 5)
+k_nearest
+```
+
+
+
+
+    [array([46.        ,  2.03696624]),
+     array([14.        ,  6.92219375]),
+     array([70.        ,  6.94698421]),
+     array([59.        , 11.10037229]),
+     array([63.        , 11.44987745])]
+
+
 
 Now, we have helper functions to help us get the distances, and then get the k-nearest neighbors based on those distances. The final helper function we'll create will help us get the labels that correspond to each of the k-nearest point, and return the class that occurs the most. 
 
@@ -105,11 +172,26 @@ Complete the `_get_label_prediction()` function in the cell below. This function
 
 ```python
 def _get_label_prediction(self, k_nearest):
-    pass
+    indices = np.array([int(p[0]) for p in k_nearest])
+    labels = np.array(self.y_train[indices])
+    return labels.argmax()
+        
 
 # This line attaches the function we just created as a method to our KNN class.
 KNN._get_label_prediction = _get_label_prediction
 ```
+
+
+```python
+knn._get_label_prediction(k_nearest)
+```
+
+
+
+
+    1
+
+
 
 Great! Now, we need to complete the `predict` method. This will be much simpler, now that we have some 
 
@@ -141,10 +223,33 @@ Follow these instructions to complete the `predict()` method in the cell below!
 
 ```python
 def predict(self, X_test, k=3):
-    pass
+    y_preds = []
+    for x in X_test:
+        distances = self._get_distances(x)
+        k_nearest = self._get_k_nearest(distances, k)
+        label = self._get_label_prediction(k_nearest)
+        y_preds.append(label)
+    return np.array(y_preds)
         
 KNN.predict = predict
 ```
+
+
+```python
+xs = np.array([[20, 30], [60, 80], [100, 120], [80, 20]])
+```
+
+
+```python
+knn.predict(xs, k=5)
+```
+
+
+
+
+    array([0, 0, 0, 0])
+
+
 
 Great! Now, let's try out our new KNN classifier on a sample dataset to see how well it works!
 
